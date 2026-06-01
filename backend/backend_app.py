@@ -1,8 +1,21 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_swagger_ui import get_swaggerui_blueprint
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
+
+SWAGGER_URL="/api/docs"  # (1) swagger endpoint e.g. HTTP://localhost:5002/api/docs
+API_URL="/static/masterblog.json" # (2) ensure you create this dir and file
+
+swagger_ui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': 'Masterblog API' # (3) You can change this if you like
+    }
+)
+app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
 
 POSTS = [
     {"id": 1, "title": "First post", "content": "This is the first post."},
@@ -62,41 +75,36 @@ def add_post():
     return jsonify(post), 201
 
 
-@app.route('/api/posts/<int:id>', methods=['DELETE'])
-def delete_post(id):
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
     """
     Deletes a post from the list of posts and returns a success message
     If post id is not found, returns a 404 status and a message
     """
     for post in POSTS:
-        if post["id"] == id:
+        if post["id"] == post_id:
             POSTS.remove(post)
-            return jsonify({"message": f"Post with id={id} successfully deleted"}), 200
+            return jsonify({"message": f"Post with id={post_id} successfully deleted"}), 200
 
-    return jsonify({"message": f"Post with id={id} not found."}), 404
+    return jsonify({"message": f"Post with id={post_id} not found."}), 404
 
 
-@app.route('/api/posts/<int:id>', methods=['PUT'])
-def update_post(id):
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
     """
     Updates a post from the list of posts
     Returns the updated post if post id exists
     If post id is not found, returns a 404 status and a message
     """
-    post_exists = False
     for post in POSTS:
-        if post["id"] == id:
-            post_exists = True
-            break
+        if post["id"] == post_id:
+            data = request.get_json()
+            post["title"] = data.get("title") or post.get("title")
+            post["content"] = data.get("content") or post.get("content")
+            return jsonify(post), 200
 
-    if not post_exists:
-        return jsonify({"message": f"Post with id={id} not found."}), 404
+    return jsonify({"message": f"Post with id={post_id} not found."}), 404
 
-    data = request.get_json()
-    post["title"] = data.get("title") or post.get("title")
-    post["content"] = data.get("content") or post.get("content")
-
-    return jsonify(post), 200
 
 
 @app.route("/api/search", methods=["GET"])
@@ -107,16 +115,11 @@ def search_posts():
     """
     title = request.args.get('title', '').strip().lower()
     content = request.args.get('content', '').strip().lower()
-    filtered_posts = []
-    for post in POSTS:
-        if title != "" and title in post["title"].lower():
-            filtered_posts.append(post)
-
-        if (content != ""
-                and content in post["content"].lower()
-                and post not in filtered_posts): # don't add double
-            filtered_posts.append(post)
-
+    filtered_posts = [
+        post for post in POSTS
+        if ((not title) or (title in post["title"].lower())) and
+           ((not content) or (content in post["content"].lower()))
+    ]
     return jsonify(filtered_posts), 200
 
 

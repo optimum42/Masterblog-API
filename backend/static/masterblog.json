@@ -1,0 +1,149 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Masterblog API",
+    "version": "1.0.0",
+    "description": "API-Dokumentation für das Masterblog Backend."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5002",
+      "description": "Lokaler Entwicklungsserver"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Post",
+      "description": "Post API - CRUD Operationen und Suche"
+    }
+  ],
+  "paths": {
+    "/api/posts": {
+      "get": {
+        "summary": "Gibt alle Posts zurück",
+        "description": "Gibt eine Liste aller Blog-Posts zurück. Optional kann die Liste sortiert werden.",
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Feld, nach dem sortiert werden soll (title oder content)",
+            "schema": {
+              "type": "string",
+              "enum": ["title", "content"]
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Sortierrichtung (asc für aufsteigend, desc für absteigend)",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Erfolgreiche Abfrage" },
+          "400": { "description": "Ungültige Sortierparameter" }
+        }
+      },
+      "post": {
+        "summary": "Erstellt einen neuen Post",
+        "tags": ["Post"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Mein neuer Post" },
+                  "content": { "type": "string", "example": "Hier steht der Inhalt." }
+                },
+                "required": ["title", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Post erfolgreich erstellt" },
+          "400": { "description": "Titel oder Inhalt fehlt" }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "delete": {
+        "summary": "Löscht einen spezifischen Post",
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Die ID des zu löschenden Posts",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Post erfolgreich gelöscht" },
+          "404": { "description": "Post nicht gefunden" }
+        }
+      },
+      "put": {
+        "summary": "Aktualisiert einen bestehenden Post",
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Die ID des zu aktualisierenden Posts",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Aktualisierter Titel" },
+                  "content": { "type": "string", "example": "Aktualisierter Inhalt" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Post erfolgreich aktualisiert" },
+          "404": { "description": "Post nicht gefunden" }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Sucht in Posts nach Titeln und/oder Inhalten",
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "description": "Suchbegriff für den Titel",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "description": "Suchbegriff für den Inhalt",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Erfolgreiche Suche" }
+        }
+      }
+    }
+  }
+}
