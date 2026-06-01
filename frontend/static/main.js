@@ -51,6 +51,8 @@ function addPost() {
     .then(response => response.json())  // Parse the JSON data from the response
     .then(post => {
         console.log('Post added:', post);
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-content').value = '';
         loadPosts(); // Reload the posts after adding a new one
     })
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
