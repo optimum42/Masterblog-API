@@ -1,0 +1,1 @@
+PATH = 'blog_posts.json'
